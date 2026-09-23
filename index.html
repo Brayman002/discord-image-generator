@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -265,4 +264,97 @@
 
         if (
             imageURL.protocol !== "http:" &&
-```
+            imageURL.protocol !== "https:"
+        ) {
+
+            error("The image must use HTTP or HTTPS.");
+
+            return;
+        }
+
+
+        if (
+            redirectURL.protocol !== "http:" &&
+            redirectURL.protocol !== "https:"
+        ) {
+
+            error("The redirect must use HTTP or HTTPS.");
+
+            return;
+        }
+
+
+        /*
+         * Build the Worker URL.
+         */
+
+        const worker =
+            new URL(WORKER_URL);
+
+
+        worker.searchParams.set(
+            "image",
+            imageURL.href
+        );
+
+
+        worker.searchParams.set(
+            "redirect",
+            redirectURL.href
+        );
+
+
+        const finalURL =
+            worker.toString();
+
+
+        document.getElementById(
+            "output"
+        ).textContent = finalURL;
+
+
+        document.getElementById(
+            "result"
+        ).style.display = "block";
+    }
+
+
+    async function copyLink() {
+
+        const value =
+            document.getElementById(
+                "output"
+            ).textContent;
+
+
+        try {
+
+            await navigator.clipboard.writeText(value);
+
+            const button =
+                document.querySelector(".copy");
+
+
+            button.textContent =
+                "Copied!";
+
+
+            setTimeout(() => {
+
+                button.textContent =
+                    "Copy Link";
+
+            }, 1500);
+
+        } catch {
+
+            alert(
+                "Copy failed. Select the link manually."
+            );
+        }
+    }
+
+</script>
+
+</body>
+</html>
