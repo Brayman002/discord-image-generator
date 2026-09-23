@@ -1,10 +1,12 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Image Link Generator</title>
+
+    <title>Image Link Generator</title>
+
     <style>
         * {
             box-sizing: border-box;
@@ -14,64 +16,77 @@
             margin: 0;
             min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+
             background: #111214;
             color: #ffffff;
+
             font-family: Arial, sans-serif;
         }
 
-        .container {
+        .box {
             width: 90%;
             max-width: 650px;
+
             background: #1e1f22;
+
             padding: 30px;
+
             border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
         h1 {
             margin-top: 0;
-            margin-bottom: 8px;
         }
 
-        .description {
+        p {
             color: #b5bac1;
-            margin-bottom: 25px;
         }
 
         label {
             display: block;
-            margin-top: 18px;
+
+            margin-top: 20px;
             margin-bottom: 7px;
+
             font-weight: bold;
         }
 
         input {
             width: 100%;
+
             padding: 13px;
-            border: 1px solid #404249;
+
             border-radius: 6px;
+            border: 1px solid #404249;
+
             background: #2b2d31;
             color: white;
+
             font-size: 15px;
-            outline: none;
         }
 
         input:focus {
+            outline: none;
             border-color: #5865f2;
         }
 
         button {
             width: 100%;
-            padding: 13px;
+
             margin-top: 22px;
-            border: 0;
+            padding: 13px;
+
+            border: none;
             border-radius: 6px;
+
             background: #5865f2;
             color: white;
+
             font-size: 16px;
             font-weight: bold;
+
             cursor: pointer;
         }
 
@@ -89,106 +104,165 @@
 
         .result {
             display: none;
+
             margin-top: 25px;
         }
 
-        .result-box {
-            background: #111214;
-            border-radius: 6px;
+        .url {
             padding: 12px;
+
+            background: #111214;
+
+            border-radius: 6px;
+
             word-break: break-all;
+
             color: #dbdee1;
         }
 
         .error {
             display: none;
+
             margin-top: 15px;
             padding: 12px;
-            border-radius: 6px;
-            background: #5c1f1f;
-            color: #ffb8b8;
-        }
 
-        .note {
-            margin-top: 20px;
-            color: #949ba4;
-            font-size: 13px;
-            line-height: 1.5;
+            background: #5c1f1f;
+
+            border-radius: 6px;
+
+            color: #ffb8b8;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Discord Image Link Generator</h1>
-        <div class="description"> Create a link that embeds an image/GIF in Discord and redirects visitors to a website. </div> <label for="imageURL"> Image / GIF URL </label> <input id="imageURL" type="url" placeholder="https://example.com/image.gif" autocomplete="off"> <label for="redirectURL"> Redirect URL </label> <input id="redirectURL" type="url" placeholder="https://example.com/" autocomplete="off"> <button onclick="generateLink()"> Generate Discord Link </button>
-        <div id="error" class="error"></div>
-        <div id="result" class="result"> <label> Generated Link </label>
-            <div id="generatedURL" class="result-box"></div> <button class="copy" onclick="copyLink()"> Copy Link </button>
-        </div>
-        <div class="note"> Discord will use the image URL for the embed. Opening the generated link normally redirects to the destination without displaying the image. </div>
+
+<div class="box">
+
+    <h1>Image Link Generator</h1>
+
+    <p>
+        Create a Discord image link that redirects visitors
+        to the website you choose.
+    </p>
+
+
+    <label for="image">
+        Image / GIF URL
+    </label>
+
+    <input
+        id="image"
+        type="url"
+        placeholder="https://example.com/image.gif"
+        autocomplete="off"
+    >
+
+
+    <label for="redirect">
+        Redirect URL
+    </label>
+
+    <input
+        id="redirect"
+        type="url"
+        placeholder="https://example.com/"
+        autocomplete="off"
+    >
+
+
+    <button onclick="generate()">
+        Generate Link
+    </button>
+
+
+    <div id="error" class="error"></div>
+
+
+    <div id="result" class="result">
+
+        <label>
+            Your Discord Link
+        </label>
+
+        <div id="output" class="url"></div>
+
+        <button class="copy" onclick="copyLink()">
+            Copy Link
+        </button>
+
     </div>
-    <script>
-        /* * ========================================== * CHANGE THIS * ========================================== * * Put your Cloudflare Worker URL here. */
-        const WORKER_URL = "https://discord-image-redirect.bmanb0201.workers.dev/";
 
-        function showError(message) {
-            const error = document.getElementById("error");
-            error.textContent = message;
-            error.style.display = "block";
+</div>
+
+
+<script>
+
+    /*
+     * YOUR CLOUDFLARE WORKER
+     */
+
+    const WORKER_URL =
+        "https://discord-image-redirect.bmanb0201.workers.dev/";
+
+
+    function error(message) {
+
+        const box =
+            document.getElementById("error");
+
+        box.textContent = message;
+
+        box.style.display = "block";
+    }
+
+
+    function generate() {
+
+        const image =
+            document.getElementById("image").value.trim();
+
+        const redirect =
+            document.getElementById("redirect").value.trim();
+
+
+        document.getElementById("error")
+            .style.display = "none";
+
+
+        if (!image) {
+
+            error("Enter an image or GIF URL.");
+
+            return;
         }
 
-        function generateLink() {
-            const imageURL = document.getElementById("imageURL").value.trim();
-            const redirectURL = document.getElementById("redirectURL").value.trim();
-            document.getElementById("error").style.display = "none";
-            if (!imageURL) {
-                showError("Please enter an image or GIF URL.");
-                return;
-            }
-            if (!redirectURL) {
-                showError("Please enter a redirect URL.");
-                return;
-            }
-            let image;
-            let redirect;
-            try {
-                image = new URL(imageURL);
-                redirect = new URL(redirectURL);
-            } catch {
-                showError("One or both URLs are invalid.");
-                return;
-            }
-            if (image.protocol !== "http:" && image.protocol !== "https:") {
-                showError("The image URL must use HTTP or HTTPS.");
-                return;
-            }
-            if (redirect.protocol !== "http:" && redirect.protocol !== "https:") {
-                showError("The redirect URL must use HTTP or HTTPS.");
-                return;
-            } /* * Create the Worker URL. */
-            const worker = new URL(WORKER_URL);
-            worker.searchParams.set("image", image.href);
-            worker.searchParams.set("redirect", redirect.href);
-            const finalURL = worker.href;
-            document.getElementById("generatedURL").textContent = finalURL;
-            document.getElementById("result").style.display = "block";
-        }
-        async function copyLink() {
-            const url = document.getElementById("generatedURL").textContent;
-            try {
-                await navigator.clipboard.writeText(url);
-                const button = document.querySelector(".copy");
-                const oldText = button.textContent;
-                button.textContent = "Copied!";
-                setTimeout(() => {
-                    button.textContent = oldText;
-                }, 1500);
-            } catch {
-                alert("Could not copy the link.");
-            }
-        }
-    </script>
-</body>
 
-</html>
+        if (!redirect) {
+
+            error("Enter a redirect URL.");
+
+            return;
+        }
+
+
+        let imageURL;
+        let redirectURL;
+
+
+        try {
+
+            imageURL = new URL(image);
+            redirectURL = new URL(redirect);
+
+        } catch {
+
+            error("One of the URLs is invalid.");
+
+            return;
+        }
+
+
+        if (
+            imageURL.protocol !== "http:" &&
+```
