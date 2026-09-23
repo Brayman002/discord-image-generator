@@ -72,7 +72,7 @@
 
 <h1>Discord Image Link Generator</h1>
 
-<label>Image / GIF URL</label>
+<label>Image / GIF / WebP URL</label>
 
 <input
     id="image"
@@ -111,6 +111,7 @@
 const WORKER_URL =
     "https://discord-image-redirect.bmanb0201.workers.dev/";
 
+
 function generate() {
 
     const image =
@@ -119,43 +120,171 @@ function generate() {
     const redirect =
         document.getElementById("redirect").value.trim();
 
+
     if (!image || !redirect) {
         alert("Enter both URLs.");
         return;
     }
 
+
+    let imageURL;
+    let redirectURL;
+
+
     try {
-        new URL(image);
-        new URL(redirect);
+
+        imageURL = new URL(image);
+        redirectURL = new URL(redirect);
+
     } catch {
+
         alert("Please enter valid URLs.");
         return;
+
     }
+
+
+    /*
+     * Get the filename from the image URL.
+     *
+     * Example:
+     *
+     * https://example.com/abc/12345.gif
+     *
+     * becomes:
+     *
+     * 12345.gif
+     */
+
+    let filename =
+        imageURL.pathname.split("/").pop();
+
+
+    /*
+     * If the URL doesn't have a filename,
+     * use a generic name.
+     */
+
+    if (!filename) {
+        filename = "image";
+    }
+
+
+    /*
+     * Decode the filename in case it contains
+     * URL-encoded characters.
+     */
+
+    try {
+        filename = decodeURIComponent(filename);
+    } catch {
+        // Keep original filename
+    }
+
+
+    /*
+     * Detect the file extension.
+     */
+
+    const lowerFilename =
+        filename.toLowerCase();
+
+
+    let extension = "image";
+
+
+    if (lowerFilename.endsWith(".gif")) {
+
+        extension = "gif";
+
+    } else if (lowerFilename.endsWith(".webp")) {
+
+        extension = "webp";
+
+    } else if (lowerFilename.endsWith(".png")) {
+
+        extension = "png";
+
+    } else if (
+        lowerFilename.endsWith(".jpg") ||
+        lowerFilename.endsWith(".jpeg")
+    ) {
+
+        extension = "jpg";
+
+    } else if (lowerFilename.endsWith(".avif")) {
+
+        extension = "avif";
+
+    }
+
+
+    /*
+     * Make the filename safe for use in the Worker path.
+     */
+
+    const safeFilename =
+        encodeURIComponent(filename);
+
+
+    /*
+     * Build:
+     *
+     * /gif/filename.gif
+     *
+     * /webp/filename.webp
+     *
+     * etc.
+     */
 
     const finalURL =
         WORKER_URL +
+        extension +
+        "/" +
+        safeFilename +
         "?image=" +
-        encodeURIComponent(image) +
+        encodeURIComponent(imageURL.href) +
         "&redirect=" +
-        encodeURIComponent(redirect);
+        encodeURIComponent(redirectURL.href);
 
-    document.getElementById("output").value = finalURL;
 
-    document.getElementById("preview").src = image;
+    /*
+     * Show generated URL.
+     */
 
-    document.getElementById("result").style.display = "block";
+    document.getElementById("output").value =
+        finalURL;
+
+
+    /*
+     * Show original image preview.
+     */
+
+    document.getElementById("preview").src =
+        imageURL.href;
+
+
+    document.getElementById("result").style.display =
+        "block";
 }
+
 
 function copyLink() {
 
     const output =
         document.getElementById("output");
 
+
     output.select();
 
-    navigator.clipboard.writeText(output.value);
+
+    navigator.clipboard.writeText(
+        output.value
+    );
+
 
     alert("Copied!");
+
 }
 
 </script>
